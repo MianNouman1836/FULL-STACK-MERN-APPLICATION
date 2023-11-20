@@ -5,7 +5,7 @@ const mongoose = require("mongoose");
 const placesRoutes = require("./routes/places-routes");
 const usersRoutes = require("./routes/users-routes");
 const HttpError = require("./models/http-error");
-const { default: mongoose } = require("mongoose");
+
 
 const app = express();
 
@@ -28,7 +28,9 @@ app.use((error, req, res, next) => {
 });
 
 mongoose
-  .connect()
+  .connect(
+    "mongodb+srv://numan1836:cricket1836@cluster0.mdpeqy7.mongodb.net/places?retryWrites=true&w=majority"
+  )
   .then(() => {
     app.listen(5000);
   })
