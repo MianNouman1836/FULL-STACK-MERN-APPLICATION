@@ -2,6 +2,7 @@ const uuid = require("uuid/v4");
 const { validationResult } = require("express-validator");
 
 const HttpError = require("../models/http-error");
+const User = require("../models/user");
 
 const DUMMY_USERS = [
   {
@@ -16,29 +17,55 @@ const getUsers = (req, res, next) => {
   res.json({ users: DUMMY_USERS });
 };
 
-const signup = (req, res, next) => {
+const signup = async (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    throw new HttpError("Invalid Inputs Passed, Please Check your Data!", 422);
+    return next(
+      new HttpError("Invalid Inputs Passed, Please Check your Data!", 422)
+    );
   }
 
-  const { name, email, password } = req.body;
+  const { name, email, password, places } = req.body;
 
-  const hasUser = DUMMY_USERS.find((u) => u.email == email);
-  if (hasUser) {
-    throw new HttpError("Could not Create User, email Already Exists!", 422);
+  let existingUser;
+  try {
+    existingUser = await User.findOne({ email: email });
+  } catch (err) {
+    const error = new HttpError(
+      "Signing Up Failed, Please Try Again Later.",
+      500
+    );
+    return next(error);
   }
 
-  const createdUser = {
-    id: uuid(),
+  if (existingUser) {
+    const error = new HttpError(
+      "User Exists Already, Please Login Instead.",
+      422
+    );
+    return next(error);
+  }
+
+  const createdUser = new User({
     name,
     email,
+    image:
+      "https://lh3.googleusercontent.com/a/ACg8ocLLCo21Z-cwM2J_-7nqiPLof2k5ThPn2DPcGrpGEv9z18sy=s288-c-no",
     password,
-  };
+    places,
+  });
 
-  DUMMY_USERS.push(createdUser);
+  try {
+    createdUser.save();
+  } catch (err) {
+    const error = new HttpError(
+      "Signing up Failed, Please Try Again Later.",
+      500
+    );
+    return next(error);
+  }
 
-  res.status(201).json({ user: createdUser });
+  res.status(201).json({ user: createdUser.toObject({ getters: true }) });
 };
 
 const login = (req, res, next) => {
