@@ -5,7 +5,6 @@ const mongoose = require("mongoose");
 const HttpError = require("../models/http-error");
 const getCoordsForAddress = require("../util/location");
 const Place = require("../models/place");
-const place = require("../models/place");
 const User = require("../models/user");
 
 const getPlaceById = async (req, res, next) => {
@@ -24,7 +23,7 @@ const getPlaceById = async (req, res, next) => {
 
   if (!place) {
     const error = new HttpError(
-      "Could not find a place for the provided id.",
+      "Could not find place for the provided id.",
       404
     );
     return next(error);
@@ -36,18 +35,19 @@ const getPlaceById = async (req, res, next) => {
 const getPlacesByUserId = async (req, res, next) => {
   const userId = req.params.uid;
 
+  // let places;
   let userWithPlaces;
-
   try {
     userWithPlaces = await User.findById(userId).populate("places");
   } catch (err) {
     const error = new HttpError(
-      "Fetching places failed, please try again later",
+      "Fetching places failed, please try again later.",
       500
     );
     return next(error);
   }
 
+  // if (!places || places.length === 0) {
   if (!userWithPlaces || userWithPlaces.places.length === 0) {
     return next(
       new HttpError("Could not find places for the provided user id.", 404)
@@ -69,7 +69,14 @@ const createPlace = async (req, res, next) => {
     );
   }
 
-  const { title, description, address, creator, coordinates } = req.body;
+  const { title, description, address, creator } = req.body;
+
+  let coordinates;
+  try {
+    coordinates = await getCoordsForAddress(address);
+  } catch (error) {
+    return next(error);
+  }
 
   const createdPlace = new Place({
     title,
@@ -77,24 +84,23 @@ const createPlace = async (req, res, next) => {
     address,
     location: coordinates,
     image:
-      "https://upload.wikimedia.org/wikipedia/commons/thumb/1/10/Empire_State_Building_%28aerial_view%29.jpg/400px-Empire_State_Building_%28aerial_view%29.jpg",
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/1/10/Empire_State_Building_%28aerial_view%29.jpg/400px-Empire_State_Building_%28aerial_view%29.jpg", // => File Upload module, will be replaced with real image url
     creator,
   });
 
   let user;
-
   try {
     user = await User.findById(creator);
   } catch (err) {
     const error = new HttpError(
-      "Creating Place Failed, Please Try Again.",
+      "Creating place failed, please try again.",
       500
     );
     return next(error);
   }
 
   if (!user) {
-    const error = new HttpError("Could not Find User for Provided Id.", 404);
+    const error = new HttpError("Could not find user for provided id.", 404);
     return next(error);
   }
 
@@ -109,7 +115,7 @@ const createPlace = async (req, res, next) => {
     await sess.commitTransaction();
   } catch (err) {
     const error = new HttpError(
-      "Creating Place Failed, Please Try Again.",
+      "Creating place failed, please try again.",
       500
     );
     return next(error);
@@ -171,7 +177,7 @@ const deletePlace = async (req, res, next) => {
   }
 
   if (!place) {
-    const error = new HttpError("Could Not Find Place for this ID.", 404);
+    const error = new HttpError("Could not find place for this id.", 404);
     return next(error);
   }
 

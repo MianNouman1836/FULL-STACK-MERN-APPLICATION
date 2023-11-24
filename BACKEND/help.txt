@@ -1,0 +1,1 @@
+"mongodb+srv://numan:cricket123@cluster0.mdpeqy7.mongodb.net/mern?retryWrites=true&w=majority"

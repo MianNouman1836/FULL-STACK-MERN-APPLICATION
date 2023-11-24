@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react";
+import React, { useState, useContext } from "react";
 
 import Card from "../../shared/components/UIElements/Card";
 import Button from "../../shared/components/FormElements/Button";
@@ -81,6 +81,7 @@ const PlaceItem = (props) => {
             {auth.isLoggedIn && (
               <Button to={`/places/${props.id}`}>EDIT</Button>
             )}
+
             {auth.isLoggedIn && (
               <Button danger onClick={showDeleteWarningHandler}>
                 DELETE
