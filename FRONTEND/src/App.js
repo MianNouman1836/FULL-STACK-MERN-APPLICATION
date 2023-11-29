@@ -26,6 +26,10 @@ const App = () => {
   const logout = useCallback(() => {
     setToken(null);
     setUserId(null);
+    localStorage.setItem(
+      "userData",
+      JSON.stringify({ userId: uid, token: token })
+    );
   }, []);
 
   let routes;
